@@ -5,7 +5,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
-const resend = new Resend('re_KunYK235_5iJp73yDLFAn87712C8fZiRG');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
