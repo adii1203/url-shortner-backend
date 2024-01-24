@@ -8,6 +8,7 @@ app.use(
     cors({
         origin: 'http://127.0.0.1:5173',
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
     })
 );
 app.use(cookieParser());
@@ -18,6 +19,6 @@ import { redirect } from './controllers/link.controller.js';
 
 app.use('/api/v1/link', linkRouter);
 app.use('/api/v1/user', userRouter);
-app.get('/:key', redirect);
 app.get('/test', (req, res) => res.send('hello world'));
+app.get('/:key', redirect);
 export default app;
