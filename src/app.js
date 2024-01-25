@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json({ limit: '20kb' }));
 app.use(
     cors({
-        origin: 'https://openurl.me',
+        origin: 'https://www.openurl.me',
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
     })
