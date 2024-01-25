@@ -10,10 +10,6 @@ const UserSchema = new Schema(
             unique: true,
             lowercase: true,
         },
-        password: {
-            type: String,
-            require: [true, 'Password is required'],
-        },
         name: {
             type: String,
             require: true,
@@ -29,10 +25,6 @@ const UserSchema = new Schema(
         isEmailVerified: {
             type: Boolean,
             default: false,
-        },
-        emailVerificationToken: {
-            type: String,
-            default: '',
         },
     },
     { timestamps: true }

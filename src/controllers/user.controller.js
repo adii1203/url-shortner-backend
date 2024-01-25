@@ -82,59 +82,65 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    if (!(email && password)) {
-        return res
-            .status(400)
-            .json(new ApiError(400, 'all fields are required'));
+    console.log(req.body);
+    const { name, email, picture, emailVerified } = req.body;
+    if (!(name && email)) {
+        throw new ApiError(400, 'name and email are required');
     }
+
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json(new ApiError(400, 'User not found'));
+            const newUser = await User.create({
+                email,
+                name,
+                profileImg: picture,
+                isEmailVerified: emailVerified,
+            });
+            const { accessToken, refreshToken } =
+                await generateAccessAndRefreshToken(newUser._id);
+            newUser.refreshToken = refreshToken;
+            await newUser.save();
+            return res
+                .cookie('token', refreshToken, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none',
+                    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+                })
+                .status(200)
+                .json(
+                    new ApiResponce(
+                        200,
+                        'success',
+                        { user: newUser, accessToken },
+                        true
+                    )
+                );
+        } else {
+            const { accessToken, refreshToken } =
+                await generateAccessAndRefreshToken(user._id);
+            user.refreshToken = refreshToken;
+            await user.save();
+            return res
+                .cookie('token', refreshToken, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none',
+                    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+                })
+                .status(200)
+                .json(
+                    new ApiResponce(
+                        200,
+                        'success',
+                        { user: user, accessToken },
+                        true
+                    )
+                );
         }
-
-        const checkPassword = await user.isCorrectPassword(password);
-        if (!checkPassword) {
-            return res.status(400).json(new ApiError(400, 'Invalid password'));
-        }
-
-        const { accessToken, refreshToken } =
-            await generateAccessAndRefreshToken(user._id);
-
-        const logedInUser = await User.findByIdAndUpdate(
-            user._id,
-            {
-                $set: {
-                    refreshToken: refreshToken,
-                },
-            },
-            {
-                new: true,
-            }
-        ).select('-password -refreshToken -emailVerificationToken');
-
-        return res
-            .cookie('token', refreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none',
-                expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-            })
-            .status(200)
-            .json(
-                new ApiResponce(
-                    200,
-                    'Login success',
-                    {
-                        user: logedInUser,
-                        accessToken,
-                    },
-                    true
-                )
-            );
     } catch (error) {
-        throw new ApiError(500, 'something went wrong while login', error);
+        console.log(error);
     }
 });
 
