@@ -6,13 +6,13 @@ const app = express();
 app.use(express.json({ limit: '20kb' }));
 app.use(
     cors({
-        origin: process.env.ORIGIN || 'http://127.0.0.1:5173',
+        origin: 'https://app.openurl.me',
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
     })
 );
 app.use(cookieParser());
-
+console.log(process.env.ORIGIN);
 import linkRouter from './routes/link.route.js';
 import userRouter from './routes/user.route.js';
 import { redirect } from './controllers/link.controller.js';
