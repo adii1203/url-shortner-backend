@@ -44,18 +44,18 @@ const redirect = async (req, res) => {
 
 const shortLink = async (req, res) => {
     const { _id } = req.user;
-    const { link } = req.body;
+    const { originUrl } = req.body;
 
-    if (!link) {
+    if (!originUrl) {
         return res.status(400).json(new ApiError(400, 'url is required'));
     }
     try {
         const user = await User.findById(_id);
-        const metaData = await getmetaData(link);
+        const metaData = await getmetaData(originUrl);
         const key = crypto.randomBytes(4).toString('hex');
         const shortenLink = await Link.create({
             key: key,
-            originUrl: link,
+            originUrl: originUrl,
             user: user._id,
             title: metaData?.title,
             description: metaData?.description,
@@ -66,9 +66,7 @@ const shortLink = async (req, res) => {
         const data = await Link.findById(shortenLink._id);
         await Stats.create({ key: data.key, linkId: data._id });
 
-        res.status(200).json(
-            new ApiResponce(200, 'link created', { link: data }, true)
-        );
+        res.status(200).json(new ApiResponce(200, 'link created', data, true));
     } catch (error) {
         return res
             .status(500)
