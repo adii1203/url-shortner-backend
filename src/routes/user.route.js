@@ -17,6 +17,6 @@ router.route('/verify-email/:token').get(verifyEmail);
 // Secure route
 
 router.route('/logout').post(verifyToken, logoutUser);
-router.route('/refresh-token').post(refreshAccessToken);
+router.route('/refresh-token').get(refreshAccessToken);
 
 export default router;
