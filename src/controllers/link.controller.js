@@ -1,12 +1,12 @@
 import Link from '../models/link.model.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import { ApiError } from '../utils/ApiError.js';
-import crypto from 'crypto';
 import { getmetaData } from '../utils/getMetaData.js';
 import User from '../models/user.model.js';
 import Stats from '../models/stats.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import parseUserAgent from 'ua-parser-js';
+import { getKey } from '../utils/generateKey.js';
 
 const redirect = async (req, res) => {
     try {
@@ -45,6 +45,7 @@ const redirect = async (req, res) => {
 const shortLink = async (req, res) => {
     const { _id } = req.user;
     const { originUrl } = req.body;
+    let { key } = req.body;
 
     if (!originUrl) {
         return res.status(400).json(new ApiError(400, 'url is required'));
@@ -52,7 +53,14 @@ const shortLink = async (req, res) => {
     try {
         const user = await User.findById(_id);
         const metaData = await getmetaData(originUrl);
-        const key = crypto.randomBytes(4).toString('hex');
+        if (!key) {
+            key = await getKey();
+        } else {
+            const existKey = await Link.findOne({ key: key });
+            if (existKey) {
+                throw new ApiError(400, 'key already exist');
+            }
+        }
         const shortenLink = await Link.create({
             key: key,
             originUrl: originUrl,
@@ -70,7 +78,13 @@ const shortLink = async (req, res) => {
     } catch (error) {
         return res
             .status(500)
-            .json(new ApiError(500, 'error while shorting link', error));
+            .json(
+                new ApiError(
+                    500,
+                    error.message || 'error while shorting link',
+                    error
+                )
+            );
     }
 };
 
