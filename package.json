@@ -19,6 +19,7 @@
         "jsonwebtoken": "^9.0.2",
         "metadata-scraper": "^0.2.61",
         "mongoose": "^8.0.2",
+        "nanoid": "^5.0.4",
         "resend": "^2.0.0",
         "ua-parser-js": "^1.0.37"
     },
