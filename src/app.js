@@ -12,7 +12,6 @@ app.use(
     })
 );
 app.use(cookieParser());
-console.log(process.env.ORIGIN);
 import linkRouter from './routes/link.route.js';
 import userRouter from './routes/user.route.js';
 import { redirect } from './controllers/link.controller.js';
