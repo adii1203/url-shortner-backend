@@ -21,10 +21,10 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res) => {
     const { email, password, name } = req.body;
-    if (!(email && password && name)) {
-        throw new ApiError(400, 'email, password and name are required');
-    }
     try {
+        if (!(email && password && name)) {
+            throw new ApiError(400, 'email, password and name are required');
+        }
         const userExist = await User.findOne({ email });
         if (userExist) {
             throw new ApiError(400, 'User already exist');
@@ -49,15 +49,62 @@ const registerUser = asyncHandler(async (req, res) => {
 
         resend.emails.send({
             from: 'shortener@updates.openurl.me',
-            to: 'aditya32ft@gmail.com',
+            to: `${email}`,
             subject: 'Email verification',
-            html: `<h1>Hey ${createdUser.name}</h1>
-            <p>Thank you for joining OpenUrl! To activate your account and start exploring, please click the verification link below:</p>
-            <a href="${req.protocol}://127.0.0.1:5173/user/auth/verify-email?id=${unHashToken}&email=${email}">Verify My Account</a>
-
-
-            <p>Best Regards,</p>
-            <p>OpenUrl</p>
+            html: `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Email Confirmation</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  margin: 0;
+                  padding: 0;
+                  background-color: #f4f4f4;
+                }
+            
+                .container {
+                  max-width: 600px;
+                  margin: 20px auto;
+                  background-color: #ffffff;
+                  padding: 20px;
+                  border-radius: 5px;
+                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+            
+                h1 {
+                  color: #333333;
+                }
+            
+                p {
+                  color: #666666;
+                }
+            
+                .button {
+                  display: inline-block;
+                  padding: 10px 20px;
+                  text-decoration: none;
+                  color: #eee;
+                  background-color: #000;
+                  border-radius: 3px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                 <h1>Hello, ${name}!</h1>
+                <p>We're excited to have you on board. To get started, please verify your email address by clicking the button below.</p>
+                
+                <a style='color:#fff' class="button" href="${req.protocol}://${
+                process.env.ORIGIN || `127.0.0.1:5173`
+            }/auth/verify/${unHashToken}?email=${email}">Confirm Email</a>
+            
+                <p>If you did not sign up for an account, please ignore this email.</p>
+              </div>
+            </body>
+            </html>
             `,
         });
 
@@ -72,12 +119,11 @@ const registerUser = asyncHandler(async (req, res) => {
                 )
             );
     } catch (error) {
-        console.log(error);
-        throw new ApiError(
-            500,
-            'something went wrong while creating user',
-            error
+        // console.log(error);
+        res.status(error.statusCode || 500).json(
+            new ApiError(error.statusCode || 500, error.message)
         );
+        // throw new ApiError(error.statusCode || 500, error.message);
     }
 });
 
@@ -167,6 +213,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const verifyEmail = asyncHandler(async (req, res) => {
     const { token } = req.params;
+    console.log(token);
     if (!token) {
         throw new ApiError(400, 'verification token not found');
     }
@@ -177,29 +224,34 @@ const verifyEmail = asyncHandler(async (req, res) => {
             .update(token)
             .digest('hex');
 
-        const verifiedUser = await User.findOneAndUpdate(
-            { emailVerificationToken: hashToken },
-            {
-                $set: {
-                    emailVerificationToken: '',
-                    isEmailVerified: true,
-                },
-            },
-            {
-                new: true,
-            }
-        );
-        if (!verifiedUser) {
-            throw new ApiError(400, 'Invalid token');
-        }
+        const verifiedUser = await User.findOneAndUpdate({
+            emailVerificationToken: hashToken,
+        });
+        console.log(verifiedUser);
+        if (verifiedUser.isEmailVerified) {
+            return res
+                .status(203)
+                .json(
+                    new ApiResponce(
+                        203,
+                        'Email already verified',
+                        undefined,
+                        false
+                    )
+                );
+        } else {
+            verifiedUser.isEmailVerified = true;
+            verifiedUser.emailVerificationToken = '';
+            await verifiedUser.save();
 
-        return res
-            .status(200)
-            .json(new ApiResponce(200, 'Email verified', undefined, true));
+            return res
+                .status(200)
+                .json(new ApiResponce(200, 'Email verified', undefined, true));
+        }
     } catch (error) {
         throw new ApiError(
-            500,
-            'something went wrong while verifying email',
+            error.statusCode || 500,
+            error.message || 'something went wrong while verifying email',
             error
         );
     }
