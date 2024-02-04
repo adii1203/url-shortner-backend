@@ -51,7 +51,7 @@ const redirect = async (req, res) => {
                         {
                             country: country || 'unknown',
                             city: city || 'unknown',
-                            flag: flag || 'unknown',
+                            flag: flag.png || 'unknown',
                         },
                     ],
                 },
