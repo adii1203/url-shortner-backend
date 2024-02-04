@@ -7,10 +7,17 @@ import Stats from '../models/stats.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import parseUserAgent from 'ua-parser-js';
 import { getKey } from '../utils/generateKey.js';
+import requestIp from 'request-ip';
+import fetch from 'node-fetch';
 
 const redirect = async (req, res) => {
     try {
         const { key } = req.params;
+        const ipAddres = requestIp.getClientIp(req);
+        const geoData = await fetch(
+            `https://ipgeolocation.abstractapi.com/v1/?api_key=dc4ee8a608ca4d2cb87265f770a461dc&ip_address=${ipAddres}`
+        );
+        const { city, country, flag } = await geoData.json();
         if (!key) {
             return res.status(400).json(new ApiError(400, 'key is required'));
         }
@@ -18,6 +25,7 @@ const redirect = async (req, res) => {
         const agent = req.headers['user-agent'];
         const agentInfo = parseUserAgent(agent);
         const isMobile = /mobile/i.test(agent);
+        const isTablet = /tablet/i.test(agent);
 
         const linkData = await Link.findOne({ key });
         if (!linkData) {
@@ -28,8 +36,24 @@ const redirect = async (req, res) => {
             { key },
             {
                 $push: {
-                    os: agentInfo.os.name,
-                    browser: agentInfo.browser.name,
+                    stats: [
+                        {
+                            os: agentInfo.os.name,
+                            browser: agentInfo.browser.name,
+                            device: isMobile
+                                ? 'mobile'
+                                : isTablet
+                                ? 'tablet'
+                                : 'desktop',
+                        },
+                    ],
+                    geo: [
+                        {
+                            country: country || 'unknown',
+                            city: city || 'unknown',
+                            flag: flag || 'unknown',
+                        },
+                    ],
                 },
             }
         );
