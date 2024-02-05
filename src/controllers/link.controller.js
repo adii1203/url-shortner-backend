@@ -36,24 +36,15 @@ const redirect = async (req, res) => {
             { key },
             {
                 $push: {
-                    stats: [
-                        {
-                            os: agentInfo.os.name,
-                            browser: agentInfo.browser.name,
-                            device: isMobile
-                                ? 'mobile'
-                                : isTablet
-                                ? 'tablet'
-                                : 'desktop',
-                        },
-                    ],
-                    geo: [
-                        {
-                            country: country || 'unknown',
-                            city: city || 'unknown',
-                            flag: flag.png || 'unknown',
-                        },
-                    ],
+                    os: agentInfo.os.name,
+                    browser: agentInfo.browser.name,
+                    country: country,
+                    device: isMobile
+                        ? 'mobile'
+                        : isTablet
+                        ? 'tablet'
+                        : 'desktop',
+                    city: city,
                 },
             }
         );

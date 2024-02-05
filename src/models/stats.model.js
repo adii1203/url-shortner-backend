@@ -9,42 +9,21 @@ const StatsSchema = new Schema({
         type: String,
         required: true,
     },
-    stats: [
-        {
-            os: {
-                type: String,
-                required: true,
-            },
-            browser: {
-                type: String,
-                required: true,
-            },
-            device: {
-                type: String,
-                required: true,
-            },
-            date: {
-                type: Date,
-                default: Date.now,
-            },
-        },
-    ],
-    geo: [
-        {
-            country: {
-                type: String,
-                required: true,
-            },
-            city: {
-                type: String,
-                required: true,
-            },
-            flag: {
-                type: String,
-                required: true,
-            },
-        },
-    ],
+    os: {
+        type: Array,
+    },
+    browser: {
+        type: Array,
+    },
+    country: {
+        type: Array,
+    },
+    device: {
+        type: Array,
+    },
+    city: {
+        type: Array,
+    },
 });
 
 const Stats = mongoose.model('Stats', StatsSchema);
